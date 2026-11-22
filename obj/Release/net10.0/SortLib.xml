@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SortLib</name>
+    </assembly>
+    <members>
+        <member name="T:SortLib.Collections.SortableObservableCollection`3">
+            <summary>
+            An observable collection that keeps its items ordered by configurable, multi-key rules.
+            Derived collections provide a typed enum selector and a default sort key.
+            </summary>
+            <typeparam name="TItem">The reference type stored in the collection.</typeparam>
+            <typeparam name="TParameter">Enum identifying sortable properties of the item.</typeparam>
+            <typeparam name="TRule">The strongly typed sort rule exposed to consumers.</typeparam>
+        </member>
+        <member name="P:SortLib.Collections.SortableObservableCollection`3.SortRules">
+            <summary>Gets the ordered list of sort rules. The first rule is the primary key.</summary>
+        </member>
+        <member name="M:SortLib.Collections.SortableObservableCollection`3.#ctor(System.Func{`0,`1,System.Object},`1)">
+            <summary>Initializes an empty collection with the specified selector and default key.</summary>
+        </member>
+        <member name="M:SortLib.Collections.SortableObservableCollection`3.#ctor(System.Collections.Generic.IEnumerable{`0},System.Func{`0,`1,System.Object},`1)">
+            <summary>Initializes the collection from items, then applies the default sort.</summary>
+        </member>
+        <member name="M:SortLib.Collections.SortableObservableCollection`3.RefreshSort">
+            <summary>
+            Reapplies sorting after a property used by a custom key selector changed indirectly.
+            Item property changes and sort-rule changes are observed automatically.
+            </summary>
+        </member>
+        <member name="M:SortLib.Collections.SortableObservableCollection`3.InsertItem(System.Int32,`0)">
+            <inheritdoc />
+        </member>
+        <member name="M:SortLib.Collections.SortableObservableCollection`3.SetItem(System.Int32,`0)">
+            <inheritdoc />
+        </member>
+        <member name="M:SortLib.Collections.SortableObservableCollection`3.RemoveItem(System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:SortLib.Collections.SortableObservableCollection`3.ClearItems">
+            <inheritdoc />
+        </member>
+        <member name="M:SortLib.Collections.SortableObservableCollection`3.OnCollectionChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs)">
+            <inheritdoc />
+        </member>
+        <member name="T:SortLib.Enums.SortKind">
+            <summary>Selects the comparison-based sorting algorithm.</summary>
+        </member>
+        <member name="F:SortLib.Enums.SortKind.Bubble">
+            <summary>Bubble sort; simple and quadratic.</summary>
+        </member>
+        <member name="F:SortLib.Enums.SortKind.Selection">
+            <summary>Selection sort; quadratic and in-place.</summary>
+        </member>
+        <member name="F:SortLib.Enums.SortKind.Insertion">
+            <summary>Insertion sort; efficient for small or nearly sorted inputs.</summary>
+        </member>
+        <member name="F:SortLib.Enums.SortKind.Quick">
+            <summary>Quick sort; average O(n log n) time.</summary>
+        </member>
+        <member name="F:SortLib.Enums.SortKind.Merge">
+            <summary>Merge sort; stable O(n log n) time.</summary>
+        </member>
+        <member name="F:SortLib.Enums.SortKind.Heap">
+            <summary>Heap sort; O(n log n) time and in-place.</summary>
+        </member>
+        <member name="T:SortLib.Enums.SortType">
+            <summary>Specifies the direction in which a sort key is ordered.</summary>
+        </member>
+        <member name="F:SortLib.Enums.SortType.Ascending">
+            <summary>Orders values from lowest to highest.</summary>
+        </member>
+        <member name="F:SortLib.Enums.SortType.Descending">
+            <summary>Orders values from highest to lowest.</summary>
+        </member>
+        <member name="T:SortLib.Models.SortRule`1">
+            <summary>
+            Describes one key in a possibly multi-key sort. Rules are evaluated in collection order,
+            with the first rule being the primary key.
+            </summary>
+            <typeparam name="TParameter">Enum identifying the property used as the sort key.</typeparam>
+        </member>
+        <member name="P:SortLib.Models.SortRule`1.SortParametr">
+            <summary>
+            Gets or sets the enum value that identifies the object property used by this rule.
+            The historical spelling <c>SortParametr</c> is retained as the public API name.
+            </summary>
+        </member>
+        <member name="P:SortLib.Models.SortRule`1.SortType">
+            <summary>Gets or sets the ordering direction for this key.</summary>
+        </member>
+        <member name="P:SortLib.Models.SortRule`1.SortKind">
+            <summary>Gets or sets the algorithm used to sort this key.</summary>
+        </member>
+        <member name="E:SortLib.Models.SortRule`1.PropertyChanged">
+            <inheritdoc />
+        </member>
+        <member name="M:SortLib.Models.SortRule`1.#ctor">
+            <summary>Initializes a rule with its default values.</summary>
+        </member>
+        <member name="M:SortLib.Models.SortRule`1.#ctor(`0,SortLib.Enums.SortType,SortLib.Enums.SortKind)">
+            <summary>Initializes a rule for the supplied key, direction and algorithm.</summary>
+        </member>
+        <member name="T:SortLib.Models.ISortRule`1">
+            <summary>Common strongly typed contract consumed by <see cref="T:SortLib.Services.SortEngine"/>.</summary>
+            <typeparam name="TParameter">Enum identifying a property on the sorted object.</typeparam>
+        </member>
+        <member name="P:SortLib.Models.ISortRule`1.SortParametr">
+            <summary>Gets the property selector associated with this rule.</summary>
+        </member>
+        <member name="P:SortLib.Models.ISortRule`1.SortType">
+            <summary>Gets the direction used for this sort key.</summary>
+        </member>
+        <member name="P:SortLib.Models.ISortRule`1.SortKind">
+            <summary>Gets the sorting algorithm used for this sort key.</summary>
+        </member>
+        <member name="T:SortLib.Services.SortEngine">
+            <summary>
+            Executes single- or multi-key sorting with selectable algorithms. Multi-key rules are
+            applied from the least significant key to the primary key using stable tie handling.
+            </summary>
+        </member>
+        <member name="M:SortLib.Services.SortEngine.Sort``2(System.Collections.Generic.IEnumerable{``0},System.Collections.Generic.IEnumerable{SortLib.Models.ISortRule{``1}},System.Func{``0,``1,System.Object},``1)">
+            <summary>
+            Sorts a sequence without modifying its source.
+            </summary>
+            <typeparam name="T">The element type.</typeparam>
+            <typeparam name="TParameter">The enum identifying sortable properties.</typeparam>
+            <param name="source">Elements to sort.</param>
+            <param name="rules">Sort rules ordered from primary to secondary.</param>
+            <param name="keySelector">Returns the value represented by a rule for an element.</param>
+            <param name="defaultParameter">The key used when no explicit rules are supplied.</param>
+            <returns>A new list sorted according to all configured rules.</returns>
+            <remarks>
+            Each algorithm uses the existing order within equal keys, so multi-key sorting remains
+            deterministic even for algorithms that are not inherently stable.
+            </remarks>
+        </member>
+    </members>
+</doc>
