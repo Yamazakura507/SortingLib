@@ -1,0 +1,53 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+[Aa]rtifacts/
+[Tt]est[Rr]esults/
+[Bb]uild[Ll]og.*
+
+# Visual Studio / IDE
+.vs/
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.sln.ide
+*.pidb
+*.svclog
+
+# Rider / ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Coverage and diagnostics
+coverage/
+coverage.*
+*.coverage
+*.coveragexml
+*.stackdump
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.log
