@@ -14,7 +14,7 @@ namespace SortLib.Collections;
 /// <typeparam name="TItem">The reference type stored in the collection.</typeparam>
 /// <typeparam name="TParameter">Enum identifying sortable properties of the item.</typeparam>
 /// <typeparam name="TRule">The strongly typed sort rule exposed to consumers.</typeparam>
-public abstract class SortableObservableCollection<TItem, TParameter, TRule> : ObservableCollection<TItem>
+public abstract class SortableObservableCollection<TItem, TParameter, TRule> : ObservableCollection<TItem>, IDisposable
     where TItem : class, INotifyPropertyChanged
     where TParameter : struct, Enum
     where TRule : SortRule<TParameter>, new()
@@ -23,6 +23,7 @@ public abstract class SortableObservableCollection<TItem, TParameter, TRule> : O
     private readonly TParameter defaultSortParametr;
     private readonly HashSet<TRule> observedRules = new(ReferenceEqualityComparer.Instance);
     private bool isApplyingSort;
+    private bool isDisposed;
 
     /// <summary>
     /// Gets the ordered list of sort rules. The first rule is the primary key.
@@ -44,9 +45,8 @@ public abstract class SortableObservableCollection<TItem, TParameter, TRule> : O
     /// Initializes the collection from items, then applies the default sort.
     /// </summary>
     protected SortableObservableCollection(
-        IEnumerable<TItem> items,
-        Func<TItem, TParameter, object?> keySelector,
-        TParameter defaultSortParametr) : this(keySelector, defaultSortParametr)
+        IEnumerable<TItem> items, Func<TItem, TParameter, object?> keySelector, TParameter defaultSortParametr) 
+        : this(keySelector, defaultSortParametr)
     {
         ArgumentNullException.ThrowIfNull(items);
 
@@ -63,6 +63,26 @@ public abstract class SortableObservableCollection<TItem, TParameter, TRule> : O
     }
 
     /// <summary>
+    /// Releases item and sort-rule event subscriptions owned by this collection.
+    /// The collection remains readable but no longer reacts to changes.
+    /// </summary>
+    public virtual void Dispose()
+    {
+        if (isDisposed) return;
+
+        isDisposed = true;
+        SortRules.CollectionChanged -= SortRulesOnCollectionChanged;
+
+        foreach (TRule rule in observedRules) rule.PropertyChanged -= SortRuleOnPropertyChanged;
+
+        observedRules.Clear();
+
+        foreach (TItem item in this) item.PropertyChanged -= ItemOnPropertyChanged;
+
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
     /// Reapplies sorting after a property used by a custom key selector changed indirectly.
     /// Item property changes and sort-rule changes are observed automatically.
     /// </summary>
@@ -73,7 +93,7 @@ public abstract class SortableObservableCollection<TItem, TParameter, TRule> : O
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        item.PropertyChanged += ItemOnPropertyChanged;
+        if (!isDisposed) item.PropertyChanged += ItemOnPropertyChanged;
 
         base.InsertItem(index, item);
     }
@@ -84,7 +104,7 @@ public abstract class SortableObservableCollection<TItem, TParameter, TRule> : O
         ArgumentNullException.ThrowIfNull(item);
 
         this[index].PropertyChanged -= ItemOnPropertyChanged;
-        item.PropertyChanged += ItemOnPropertyChanged;
+        if (!isDisposed) item.PropertyChanged += ItemOnPropertyChanged;
 
         base.SetItem(index, item);
     }
@@ -110,7 +130,7 @@ public abstract class SortableObservableCollection<TItem, TParameter, TRule> : O
     {
         base.OnCollectionChanged(e);
 
-        if (!isApplyingSort) ApplySort();
+        if (!isApplyingSort && !isDisposed) ApplySort();
     }
 
     private void SortRulesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -133,7 +153,7 @@ public abstract class SortableObservableCollection<TItem, TParameter, TRule> : O
 
     private void ApplySort(bool notifyReset = false)
     {
-        if (isApplyingSort) return;
+        if (isDisposed || isApplyingSort) return;
 
         if (Count < 2)
         {
