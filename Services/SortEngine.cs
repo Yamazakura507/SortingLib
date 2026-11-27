@@ -23,6 +23,12 @@ public static class SortEngine
     /// <remarks>
     /// Each algorithm uses the existing order within equal keys, so multi-key sorting remains
     /// deterministic even for algorithms that are not inherently stable.
+    ///
+    /// For each sort parameter, the selector must return keys of one mutually comparable runtime
+    /// type. Nullable keys are supported and sort before non-null keys. Numeric widening is not
+    /// performed: mixing, for example, <see cref="int"/> and <see cref="long"/> keys for the same
+    /// parameter is rejected with <see cref="InvalidOperationException"/>. Normalize mixed inputs
+    /// in the selector or provide a consistent comparer before sorting.
     /// </remarks>
     public static List<T> Sort<T, TParameter>(
         this IEnumerable<T> source,
@@ -66,14 +72,31 @@ public static class SortEngine
         return result;
     }
 
+    /// <summary>
+    /// Compares boxed keys. Keys selected for the same sort parameter must be mutually comparable.
+    /// String keys use the current culture, ignoring case; null sorts before non-null values.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when two non-null keys do not support comparison with one another.
+    /// </exception>
     private static int CompareKeys(object? left, object? right)
     {
         if (ReferenceEquals(left, right)) return 0;
-        else if (left is null) return -1;
-        else if (right is null) return 1;
-        else if (left is string leftText && right is string rightText)
+        if (left is null) return -1;
+        if (right is null) return 1;
+        if (left is string leftText && right is string rightText)
             return StringComparer.CurrentCultureIgnoreCase.Compare(leftText, rightText);
-        else return Comparer<object>.Default.Compare(left, right);
+
+        try
+        {
+            return Comparer<object>.Default.Compare(left, right);
+        }
+        catch (ArgumentException exception)
+        {
+            throw new InvalidOperationException(
+                $"Sort keys of types '{left.GetType().FullName}' and '{right.GetType().FullName}' are not mutually comparable. Use one consistent comparable key type for each sort parameter.",
+                exception);
+        }
     }
 
     private static void SortEntries<T>(this List<SortEntry<T>> items, Comparison<SortEntry<T>> compare, SortKind kind)

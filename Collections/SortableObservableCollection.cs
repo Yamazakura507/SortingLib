@@ -145,11 +145,56 @@ public abstract class SortableObservableCollection<TItem, TParameter, TRule> : O
         }
 
         ApplySort();
+        OnSortRulesChanged();
     }
 
-    private void SortRuleOnPropertyChanged(object? sender, PropertyChangedEventArgs e) => ApplySort();
+    private void SortRuleOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        ApplySort();
+        OnSortRulesChanged();
+    }
 
-    private void ItemOnPropertyChanged(object? sender, PropertyChangedEventArgs e) => ApplySort(notifyReset: true);
+    private void ItemOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (isDisposed) return;
+
+        if (IsSortPropertyChanged(e)) ApplySort(notifyReset: true);
+        OnItemPropertyChanged(e);
+    }
+
+    /// <summary>
+    /// Determines whether the changed item property is used by the active sort rules.
+    /// By default the property name must match the sort-parameter enum member name.
+    /// Override this method when a selector maps an enum member to a differently named or
+    /// computed property. An empty property name conservatively triggers a full sort.
+    /// </summary>
+    protected virtual bool IsSortPropertyChanged(PropertyChangedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.PropertyName)) return true;
+
+        IEnumerable<TParameter> parameters = SortRules.Count == 0
+            ? [defaultSortParametr]
+            : SortRules.Select(rule => rule.SortParametr);
+
+        return parameters.Any(parameter =>
+            string.Equals(parameter.ToString(), e.PropertyName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Indicates that the collection is currently emitting collection-change events
+    /// caused by an internal sort operation.
+    /// </summary>
+    protected bool IsApplyingSort => isApplyingSort;
+
+    /// <summary>
+    /// Called once after an observed item changes, after its sort order has been updated.
+    /// </summary>
+    protected virtual void OnItemPropertyChanged(PropertyChangedEventArgs e) { }
+
+    /// <summary>
+    /// Called once after the sort-rule collection changes and the source order is updated.
+    /// </summary>
+    protected virtual void OnSortRulesChanged() { }
 
     private void ApplySort(bool notifyReset = false)
     {
